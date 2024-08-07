@@ -3,26 +3,43 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Cat, Heart, Info, Paw, Moon, Sun } from "lucide-react";
+import { Cat, Heart, Info, Paw, Moon, Sun, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [likeCount, setLikeCount] = useState(0);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [catFact, setCatFact] = useState("");
+  const [catFactLoading, setCatFactLoading] = useState(false);
+  const [catLoverLevel, setCatLoverLevel] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCatFact();
   }, []);
 
+  useEffect(() => {
+    const newLevel = Math.min(Math.floor(likeCount / 10), 5);
+    setCatLoverLevel(newLevel);
+  }, [likeCount]);
+
   const fetchCatFact = async () => {
+    setCatFactLoading(true);
     try {
       const response = await fetch("https://catfact.ninja/fact");
       const data = await response.json();
       setCatFact(data.fact);
     } catch (error) {
       console.error("Error fetching cat fact:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch a cat fact. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCatFactLoading(false);
     }
   };
 
@@ -31,10 +48,19 @@ const Index = () => {
     document.documentElement.classList.toggle("dark");
   };
 
+  const catLoverTitles = [
+    "Curious Kitten",
+    "Playful Paw",
+    "Feline Friend",
+    "Cat Connoisseur",
+    "Whisker Wizard",
+    "Legendary Cat Lover",
+  ];
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-purple-200 via-pink-200 to-blue-200'}`}>
       {/* Header */}
-      <header className="p-4 flex justify-between items-center">
+      <header className="p-4 flex justify-between items-center backdrop-blur-md bg-white/30 dark:bg-gray-800/30 sticky top-0 z-10">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -44,25 +70,55 @@ const Index = () => {
             <Paw className="mr-2" /> Feline Fascination
           </h1>
         </motion.div>
-        <Button onClick={toggleDarkMode} variant="outline" size="icon">
-          {isDarkMode ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
-        </Button>
+        <div className="flex items-center space-x-4">
+          <Badge variant="outline" className="text-sm">
+            {catLoverTitles[catLoverLevel]} <Sparkles className="ml-1 h-3 w-3" />
+          </Badge>
+          <Button onClick={toggleDarkMode} variant="outline" size="icon">
+            {isDarkMode ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+          </Button>
+        </div>
       </header>
 
       {/* Hero Section */}
-      <div className="relative h-[60vh] bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'}}>
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="relative h-[70vh] bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'}}>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-center text-white"
+            className="text-center text-white max-w-4xl px-4"
           >
-            <h2 className="text-6xl font-bold mb-4">Discover the Wonderful World of Cats</h2>
-            <p className="text-xl mb-8">Explore, learn, and fall in love with our feline friends</p>
-            <Button onClick={fetchCatFact} size="lg" className="bg-purple-600 hover:bg-purple-700">
-              Get a Cat Fact
-            </Button>
+            <motion.h2 
+              className="text-5xl sm:text-6xl md:text-7xl font-bold mb-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
+              Discover the Wonderful World of Cats
+            </motion.h2>
+            <motion.p 
+              className="text-xl mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+            >
+              Explore, learn, and fall in love with our feline friends
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.8 }}
+            >
+              <Button 
+                onClick={fetchCatFact} 
+                size="lg" 
+                className="bg-purple-600 hover:bg-purple-700 transition-all duration-300 transform hover:scale-105"
+                disabled={catFactLoading}
+              >
+                {catFactLoading ? "Fetching..." : "Get a Cat Fact"}
+              </Button>
+            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -86,6 +142,18 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-8"
+        >
+          <h2 className="text-3xl font-bold mb-4">Your Cat Lover Journey</h2>
+          <Progress value={(catLoverLevel / 5) * 100} className="w-full h-2" />
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            Level {catLoverLevel + 1}: {catLoverTitles[catLoverLevel]}
+          </p>
+        </motion.div>
         <Tabs defaultValue="characteristics" className="mb-12">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="characteristics">Cat Characteristics</TabsTrigger>
@@ -141,27 +209,53 @@ const Index = () => {
         </Tabs>
 
         {/* Interactive Elements */}
-        <div className="text-center space-y-4">
-          <Button 
-            onClick={() => {
-              setLikeCount(prev => prev + 1);
-              toast({
-                title: "Thanks for your love!",
-                description: `You've liked cats ${likeCount + 1} times.`,
-              });
-            }}
-            className="group"
+        <div className="text-center space-y-6">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <Heart className="mr-2 h-4 w-4 group-hover:text-red-500 transition-colors" />
-            Like Cats ({likeCount})
-          </Button>
-          <div>
-            <Button onClick={fetchCatFact} variant="outline">
-              Get Another Cat Fact
+            <Button 
+              onClick={() => {
+                setLikeCount(prev => prev + 1);
+                toast({
+                  title: "Thanks for your love!",
+                  description: `You've liked cats ${likeCount + 1} times.`,
+                });
+              }}
+              className="group text-lg px-6 py-3"
+              variant="outline"
+            >
+              <Heart className="mr-2 h-5 w-5 group-hover:text-red-500 transition-colors" />
+              Like Cats ({likeCount})
             </Button>
-          </div>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button 
+              onClick={fetchCatFact} 
+              variant="default"
+              className="text-lg px-6 py-3"
+              disabled={catFactLoading}
+            >
+              {catFactLoading ? "Fetching..." : "Get Another Cat Fact"}
+            </Button>
+          </motion.div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-100 dark:bg-gray-800 py-8 mt-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <p className="text-gray-600 dark:text-gray-400">
+            © 2023 Feline Fascination. All rights reserved.
+          </p>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-500">
+            Made with <Heart className="inline-block h-4 w-4 text-red-500" /> by cat lovers, for cat lovers.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
