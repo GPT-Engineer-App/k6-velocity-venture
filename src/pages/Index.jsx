@@ -1,15 +1,54 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Cat, Heart, Info } from "lucide-react";
+import { Cat, Heart, Info, Paw, Moon, Sun } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [likeCount, setLikeCount] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [catFact, setCatFact] = useState("");
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchCatFact();
+  }, []);
+
+  const fetchCatFact = async () => {
+    try {
+      const response = await fetch("https://catfact.ninja/fact");
+      const data = await response.json();
+      setCatFact(data.fact);
+    } catch (error) {
+      console.error("Error fetching cat fact:", error);
+    }
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle("dark");
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-100 to-pink-100">
+    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-purple-100 to-pink-100'}`}>
+      {/* Header */}
+      <header className="p-4 flex justify-between items-center">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-3xl font-bold flex items-center">
+            <Paw className="mr-2" /> Feline Fascination
+          </h1>
+        </motion.div>
+        <Button onClick={toggleDarkMode} variant="outline" size="icon">
+          {isDarkMode ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+        </Button>
+      </header>
+
       {/* Hero Section */}
       <div className="relative h-[60vh] bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'}}>
         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -19,11 +58,31 @@ const Index = () => {
             transition={{ duration: 0.8 }}
             className="text-center text-white"
           >
-            <h1 className="text-6xl font-bold mb-4">Feline Fascination</h1>
-            <p className="text-xl">Discover the Wonderful World of Cats</p>
+            <h2 className="text-6xl font-bold mb-4">Discover the Wonderful World of Cats</h2>
+            <p className="text-xl mb-8">Explore, learn, and fall in love with our feline friends</p>
+            <Button onClick={fetchCatFact} size="lg" className="bg-purple-600 hover:bg-purple-700">
+              Get a Cat Fact
+            </Button>
           </motion.div>
         </div>
       </div>
+
+      {/* Cat Fact Section */}
+      <AnimatePresence>
+        {catFact && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-3xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
+          >
+            <h3 className="text-2xl font-semibold mb-4 flex items-center">
+              <Info className="mr-2" /> Did You Know?
+            </h3>
+            <p className="text-lg">{catFact}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
@@ -33,51 +92,74 @@ const Index = () => {
             <TabsTrigger value="breeds">Popular Breeds</TabsTrigger>
           </TabsList>
           <TabsContent value="characteristics">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center"><Info className="mr-2" /> Characteristics of Cats</CardTitle>
-                <CardDescription>What makes cats unique and lovable?</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc pl-6 space-y-2">
-                  <li>Independent nature with a touch of affection</li>
-                  <li>Excellent hunters with sharp claws and keen senses</li>
-                  <li>Flexible bodies capable of impressive acrobatics</li>
-                  <li>Masters of communication through various means</li>
-                  <li>Curious explorers with a love for cozy spaces</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center"><Info className="mr-2" /> Characteristics of Cats</CardTitle>
+                  <CardDescription>What makes cats unique and lovable?</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc pl-6 space-y-2">
+                    <li>Independent nature with a touch of affection</li>
+                    <li>Excellent hunters with sharp claws and keen senses</li>
+                    <li>Flexible bodies capable of impressive acrobatics</li>
+                    <li>Masters of communication through various means</li>
+                    <li>Curious explorers with a love for cozy spaces</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
           <TabsContent value="breeds">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center"><Cat className="mr-2" /> Popular Cat Breeds</CardTitle>
-                <CardDescription>Explore some well-known cat breeds from around the world</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="grid grid-cols-2 gap-4">
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Siamese" className="w-10 h-10 rounded-full mr-2" /> Siamese</li>
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Persian" className="w-10 h-10 rounded-full mr-2" /> Persian</li>
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Maine Coon" className="w-10 h-10 rounded-full mr-2" /> Maine Coon</li>
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Bengal" className="w-10 h-10 rounded-full mr-2" /> Bengal</li>
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Scottish Fold" className="w-10 h-10 rounded-full mr-2" /> Scottish Fold</li>
-                  <li className="flex items-center"><img src="/placeholder.svg" alt="Sphynx" className="w-10 h-10 rounded-full mr-2" /> Sphynx</li>
-                </ul>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center"><Cat className="mr-2" /> Popular Cat Breeds</CardTitle>
+                  <CardDescription>Explore some well-known cat breeds from around the world</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <li className="flex items-center"><img src="https://placekitten.com/100/100" alt="Siamese" className="w-10 h-10 rounded-full mr-2" /> Siamese</li>
+                    <li className="flex items-center"><img src="https://placekitten.com/101/101" alt="Persian" className="w-10 h-10 rounded-full mr-2" /> Persian</li>
+                    <li className="flex items-center"><img src="https://placekitten.com/102/102" alt="Maine Coon" className="w-10 h-10 rounded-full mr-2" /> Maine Coon</li>
+                    <li className="flex items-center"><img src="https://placekitten.com/103/103" alt="Bengal" className="w-10 h-10 rounded-full mr-2" /> Bengal</li>
+                    <li className="flex items-center"><img src="https://placekitten.com/104/104" alt="Scottish Fold" className="w-10 h-10 rounded-full mr-2" /> Scottish Fold</li>
+                    <li className="flex items-center"><img src="https://placekitten.com/105/105" alt="Sphynx" className="w-10 h-10 rounded-full mr-2" /> Sphynx</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           </TabsContent>
         </Tabs>
 
-        {/* Interactive Element */}
-        <div className="text-center">
+        {/* Interactive Elements */}
+        <div className="text-center space-y-4">
           <Button 
-            onClick={() => setLikeCount(prev => prev + 1)}
+            onClick={() => {
+              setLikeCount(prev => prev + 1);
+              toast({
+                title: "Thanks for your love!",
+                description: `You've liked cats ${likeCount + 1} times.`,
+              });
+            }}
             className="group"
           >
             <Heart className="mr-2 h-4 w-4 group-hover:text-red-500 transition-colors" />
             Like Cats ({likeCount})
           </Button>
+          <div>
+            <Button onClick={fetchCatFact} variant="outline">
+              Get Another Cat Fact
+            </Button>
+          </div>
         </div>
       </div>
     </div>
