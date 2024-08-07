@@ -3,10 +3,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Cat, Heart, Info, Paw, Moon, Sun, Sparkles } from "lucide-react";
+import { Cat, Heart, Info, Paw, Moon, Sun, Sparkles, Camera, Share2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Index = () => {
   const [likeCount, setLikeCount] = useState(0);
@@ -14,10 +17,13 @@ const Index = () => {
   const [catFact, setCatFact] = useState("");
   const [catFactLoading, setCatFactLoading] = useState(false);
   const [catLoverLevel, setCatLoverLevel] = useState(0);
+  const [catImages, setCatImages] = useState([]);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCatFact();
+    fetchCatImages();
   }, []);
 
   useEffect(() => {
@@ -43,6 +49,16 @@ const Index = () => {
     }
   };
 
+  const fetchCatImages = async () => {
+    try {
+      const response = await fetch("https://api.thecatapi.com/v1/images/search?limit=5");
+      const data = await response.json();
+      setCatImages(data.map(img => img.url));
+    } catch (error) {
+      console.error("Error fetching cat images:", error);
+    }
+  };
+
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
@@ -56,6 +72,15 @@ const Index = () => {
     "Whisker Wizard",
     "Legendary Cat Lover",
   ];
+
+  const handleShare = () => {
+    // Implement sharing functionality here
+    toast({
+      title: "Shared!",
+      description: "Your love for cats has been shared with the world!",
+    });
+    setIsShareDialogOpen(false);
+  };
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'bg-gray-900 text-white' : 'bg-gradient-to-b from-purple-200 via-pink-200 to-blue-200'}`}>
@@ -81,7 +106,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <div className="relative h-[70vh] bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'}}>
+      <div className="relative h-[80vh] bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80")'}}>
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-center">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -109,6 +134,7 @@ const Index = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.8 }}
+              className="space-x-4"
             >
               <Button 
                 onClick={fetchCatFact} 
@@ -118,9 +144,39 @@ const Index = () => {
               >
                 {catFactLoading ? "Fetching..." : "Get a Cat Fact"}
               </Button>
+              <Button
+                onClick={() => setIsShareDialogOpen(true)}
+                size="lg"
+                variant="outline"
+                className="bg-white/20 hover:bg-white/30 text-white transition-all duration-300 transform hover:scale-105"
+              >
+                <Share2 className="mr-2 h-5 w-5" /> Share Your Love
+              </Button>
             </motion.div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Cat Image Carousel */}
+      <div className="max-w-4xl mx-auto mt-12 px-4">
+        <h3 className="text-2xl font-semibold mb-4 text-center">Adorable Cat Gallery</h3>
+        <Carousel className="w-full max-w-xs mx-auto">
+          <CarouselContent>
+            {catImages.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="p-1">
+                  <Card>
+                    <CardContent className="flex aspect-square items-center justify-center p-6">
+                      <img src={image} alt={`Cat ${index + 1}`} className="w-full h-full object-cover rounded-lg" />
+                    </CardContent>
+                  </Card>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious />
+          <CarouselNext />
+        </Carousel>
       </div>
 
       {/* Cat Fact Section */}
@@ -242,8 +298,41 @@ const Index = () => {
               {catFactLoading ? "Fetching..." : "Get Another Cat Fact"}
             </Button>
           </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Button
+              onClick={() => fetchCatImages()}
+              variant="secondary"
+              className="text-lg px-6 py-3"
+            >
+              <Camera className="mr-2 h-5 w-5" /> Refresh Cat Gallery
+            </Button>
+          </motion.div>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share Your Love for Cats</DialogTitle>
+            <DialogDescription>
+              Spread the joy of cats with your friends and family!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Input id="name" placeholder="Your name" className="col-span-4" />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Input id="message" placeholder="Your message" className="col-span-4" />
+            </div>
+          </div>
+          <Button onClick={handleShare}>Share Now</Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Footer */}
       <footer className="bg-gray-100 dark:bg-gray-800 py-8 mt-12">
